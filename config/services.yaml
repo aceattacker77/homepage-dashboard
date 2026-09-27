@@ -126,6 +126,7 @@
             name: name
             label: label
             limit: 6
+            target: "{link}"
 
 # ---------------------------------------------------------------------------
 # YouTube uploads, one Custom API card per channel.
