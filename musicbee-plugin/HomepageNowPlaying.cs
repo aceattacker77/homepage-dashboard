@@ -38,7 +38,7 @@ namespace MusicBeePlugin
             about.PluginInfoVersion = PluginInfoVersion;
             about.Name = "Homepage Now Playing";
             about.Description = "Shares the current track with the Homepage dashboard (writes a local JSON file)";
-            about.Author = "Homepage dashboard";
+            about.Author = "Ace Attacker";
             about.TargetApplication = "";
             about.Type = PluginType.General;
             about.VersionMajor = 1;
