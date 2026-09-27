@@ -5,38 +5,27 @@
 title: CYBER://HUB
 theme: dark
 color: slate
-
-# Header & Search Bar Setup
 headerStyle: boxed
-search:
-  provider: google 
-  target: _blank
-  focus: true
 
-# Cyberpunk UI Layout Options
-layout:
-  Downloads:
-    style: grid
-    columns: 2
-  Infrastructure:
-    style: grid
-    columns: 2
-  Hermes Agents:
-    style: grid
-    columns: 3
-  YouTube:
-    style: grid
-    columns: 3
-
-# Status Indicators
-providers:
-  status:
-    style: dot
-
-# Card Style Tweaks
-cardBlur: sm
+# Soft glass: frosted cards, equal-height rows.
+cardBlur: md
+useEqualHeights: true
+statusStyle: "dot"
 showStats: true
 
-#providers:
-  #openweathermap: openweathermapapikey
-  #weatherapi: weatherapiapikey
+# Every service group is a full-width row (Homepage styles are "row" or the
+# default "column"; there is no "grid"). Key order here = order on the page.
+layout:
+  Hermes Agents:
+    style: row
+    columns: 4
+  Mind:
+    style: row
+    columns: 3
+  Infrastructure:
+    style: row
+    columns: 3
+  YouTube:
+    style: row
+    columns: 3
+    initiallyCollapsed: true

@@ -123,6 +123,15 @@ def test_build_second_brain_shape(tmp_path, no_parent_repo):
     assert [i["href"] for i in out["items"]] == [out["note_uri"], out["note_uri"], out["vault_uri"]]
 
 
+def test_added_label_shows_top_two_folders(tmp_path, no_parent_repo):
+    for rel in ["projects/a/STATUS.md", "projects/b/STATUS.md", "projects/c/STATUS.md",
+                "README.md", "AGENTS.md", "inbox/x.md", "reviews/r.md"]:
+        write(tmp_path, rel)
+    out = sb.build_second_brain(tmp_path, "second-brain", NOW)
+    assert out["added_label"] == "7 · 3 projects · 2 root"
+    assert out["added_breakdown"] == "1 inbox · 3 projects · 1 reviews · 2 root"
+
+
 def test_build_second_brain_empty_vault(tmp_path, no_parent_repo):
     out = sb.build_second_brain(tmp_path, "second-brain", NOW)
     assert out["note_title"] == "No notes yet"

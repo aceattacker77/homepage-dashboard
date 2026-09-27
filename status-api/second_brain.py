@@ -146,7 +146,10 @@ def build_second_brain(vault, vault_name, now):
     added, source = added_since(vault, week_start_local(now))
     by_folder = Counter(p.split("/", 1)[0] if "/" in p else "root" for p in added)
     breakdown = " · ".join(f"{n} {name}" for name, n in sorted(by_folder.items()))
-    added_label = f"{len(added)} · {breakdown}" if added else "0"
+    # The card row only fits the two biggest folders; the full split stays in
+    # added_breakdown.
+    top = sorted(by_folder.items(), key=lambda kv: (-kv[1], kv[0]))[:2]
+    added_label = " · ".join([str(len(added))] + [f"{n} {name}" for name, n in top])
 
     return {
         "note_title": title,

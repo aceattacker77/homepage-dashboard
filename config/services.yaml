@@ -55,20 +55,6 @@
             label: summary
             limit: 5
 
-    - Headlines:
-        icon: si-rss
-        description: Latest headlines from rss_feeds.json
-        widget:
-          type: customapi
-          url: "{{HOMEPAGE_VAR_STATUS_API}}/rss-digest"
-          refreshInterval: 600000
-          display: dynamic-list
-          mappings:
-            items: items
-            name: name
-            label: label
-            limit: 6
-
     - GPU:
         icon: si-nvidia
         description: Host GPU via nvidia-smi
@@ -85,6 +71,61 @@
               label: Temp
             - field: power_label
               label: Power
+
+# ---------------------------------------------------------------------------
+# Mind: what Hermes and I have been learning. Both new cards are Custom API
+# widgets on the status API (see status-api/README.md).
+# ---------------------------------------------------------------------------
+- Mind:
+    - Skills Learned:
+        icon: mdi-school-outline
+        description: New Hermes skills per week
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/skills-learned"
+          refreshInterval: 300000
+          display: list
+          mappings:
+            - field: this_week
+              label: This week
+            - field: last_week
+              label: Last week
+            - field: total
+              label: Learned
+            - field: trend
+              label: 8 weeks
+            - field: latest_label
+              label: Latest
+
+    - Second Brain:
+        icon: mdi-brain
+        href: "obsidian://open?vault=second-brain"
+        description: Note of the day
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/second-brain"
+          refreshInterval: 300000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 3
+            target: "{href}"
+
+    - Headlines:
+        icon: si-rss
+        description: Latest headlines from rss_feeds.json
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/rss-digest"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 6
 
 # ---------------------------------------------------------------------------
 # YouTube uploads, one Custom API card per channel.
@@ -190,7 +231,8 @@
             target: "https://www.youtube.com/watch?v={video_id}"
 
 # ---------------------------------------------------------------------------
-# Container list. Each card is bound to a running container via the
+# Container list (Homepage, FreshRSS, JDownloader). Each card is bound to a
+# running container via the
 # `my-docker` server defined in docker.yaml, so Homepage shows live container
 # state plus per-container CPU/RAM stats.
 # ---------------------------------------------------------------------------
@@ -207,8 +249,6 @@
         description: "RSS aggregator"
         server: my-docker
         container: freshrss
-
-- Downloads:
     - JDownloader 2:
         icon: jdownloader.png
         href: "http://localhost:5800"
