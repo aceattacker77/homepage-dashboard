@@ -95,6 +95,33 @@ def test_corrupt_ledger_is_rebuilt(tmp_path):
     assert json.loads(ledger.read_text(encoding="utf-8"))["version"] == 1
 
 
+def test_malformed_ledger_entries_are_reseeded(tmp_path):
+    user = str(tmp_path / "user")
+    make_skill(user, "capture", on=date(2026, 9, 26))
+    make_skill(user, "everything-search", on=date(2026, 9, 26))
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"version": 1, "skills": {
+        "capture": {"bundled": False},                        # no first_seen
+        "everything-search": "oops",                          # not a dict
+        "gone": {"first_seen": "not-a-date", "bundled": False},
+    }}), encoding="utf-8")
+    out = sl.build_skills_learned([user], [], str(ledger), TODAY)
+    assert out["total"] == 2
+    assert out["this_week"] == 2  # re-seeded from SKILL.md (Sat 26th, this week)
+
+
+def test_ledger_save_failure_still_returns_summary(tmp_path, monkeypatch):
+    user = str(tmp_path / "user")
+    make_skill(user, "capture", on=date(2026, 9, 26))
+
+    def locked(*_args):
+        raise PermissionError("file in use")
+
+    monkeypatch.setattr(sl.os, "replace", locked)
+    out = sl.build_skills_learned([user], [], str(tmp_path / "ledger.json"), TODAY)
+    assert out["total"] == 1
+
+
 def test_summary_week_buckets():
     ledger = {"version": 1, "skills": {
         "a": {"first_seen": "2026-09-21", "bundled": False},  # Mon this week

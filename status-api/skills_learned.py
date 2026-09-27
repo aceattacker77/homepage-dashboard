@@ -50,11 +50,23 @@ def seed_date(skill_dirs, today):
     return datetime.fromtimestamp(earliest).date()
 
 
+def _valid_entry(entry):
+    if not isinstance(entry, dict) or not isinstance(entry.get("first_seen"), str):
+        return False
+    try:
+        date.fromisoformat(entry["first_seen"])
+    except ValueError:
+        return False
+    return True
+
+
 def load_ledger(path):
+    """The ledger, with malformed entries dropped so they re-seed."""
     try:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
         if isinstance(data, dict) and isinstance(data.get("skills"), dict):
+            data["skills"] = {k: v for k, v in data["skills"].items() if _valid_entry(v)}
             return data
     except (OSError, ValueError):
         pass
@@ -133,5 +145,10 @@ def build_skills_learned(skill_trees, bundled_trees, ledger_path, today):
     ledger = load_ledger(ledger_path)
     bundled = set(collect_skills(bundled_trees))
     if update_ledger(ledger, collect_skills(skill_trees), bundled, today):
-        save_ledger(ledger_path, ledger)
+        try:
+            save_ledger(ledger_path, ledger)
+        except OSError:
+            # e.g. the file is held open by an editor or AV scanner on Windows.
+            # Serve this run's numbers; the next refresh retries the save.
+            pass
     return summarise(ledger, today)

@@ -951,10 +951,19 @@ def gpu_status():
 # 7. /skills-learned
 # --------------------------------------------------------------------------
 
+def build_skills_card():
+    try:
+        return skills_learned.build_skills_learned(
+            skill_trees(), BUNDLED_SKILL_TREES, SKILLS_LEDGER, datetime.now().date())
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        # Keep the card rendering (zeros + reason) instead of a 500.
+        empty = skills_learned.summarise({"version": 1, "skills": {}}, datetime.now().date())
+        return {**empty, "error": f"{type(exc).__name__}: {exc}"}
+
+
 @app.get("/skills-learned")
 def skills_learned_route():
-    return JSONResponse(cached("skills", SKILLS_CACHE_TTL, lambda: skills_learned.build_skills_learned(
-        skill_trees(), BUNDLED_SKILL_TREES, SKILLS_LEDGER, datetime.now().date())))
+    return JSONResponse(cached("skills", SKILLS_CACHE_TTL, build_skills_card))
 
 
 # --------------------------------------------------------------------------

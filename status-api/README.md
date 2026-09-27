@@ -97,9 +97,11 @@ depend on the Hermes venv.
 
 `state/skills_ledger.json` freezes the date each skill name was first seen.
 The first sighting is seeded from the earliest creation/modification time
-of any file in any copy of that skill. After that, edits, copies and backup
-restores cannot move it. Delete the file to re-seed from timestamps. It is
-gitignored and is this API's only write.
+of `SKILL.md` across every copy of that skill (other files are ignored: a
+skill's `.venv` keeps each package's release date). After that, edits,
+copies and backup restores cannot move it. Malformed entries are dropped and
+re-seeded. Delete the file to re-seed everything. It is gitignored and is
+this API's only write.
 
 ## Tests
 

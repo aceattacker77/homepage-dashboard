@@ -88,10 +88,22 @@ def week_start_local(now):
     return datetime.combine(monday, datetime.min.time(), tzinfo=now.tzinfo)
 
 
-def _git_lines(vault, *args):
+def _git_exe():
+    """The real git binary. Git for Windows' cmd\\git.exe is only a launcher:
+    killing it on timeout leaves the real git holding the pipe, and the
+    subprocess call then blocks forever."""
     git = shutil.which("git") or r"C:\Program Files\Git\cmd\git.exe"
+    path = Path(git)
+    if path.parent.name.lower() == "cmd":
+        real = path.parent.parent / "mingw64" / "bin" / "git.exe"
+        if real.is_file():
+            return str(real)
+    return git
+
+
+def _git_lines(vault, *args):
     out = subprocess.run(
-        [git, "-c", "core.quotepath=off", *args],
+        [_git_exe(), "-c", "core.quotepath=off", *args],
         cwd=vault, capture_output=True, text=True, encoding="utf-8",
         timeout=10, check=True,
     ).stdout

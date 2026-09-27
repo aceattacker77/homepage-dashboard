@@ -20,6 +20,19 @@ def test_skills_learned_route(tmp_path, monkeypatch):
     assert body["total"] == 1 and body["latest"] == "capture"
 
 
+def test_skills_learned_route_survives_errors(monkeypatch):
+    def boom(*_args):
+        raise OSError("disk gone")
+
+    monkeypatch.setattr(status_api.skills_learned, "build_skills_learned", boom)
+    _reset("skills")
+    resp = TestClient(status_api.app).get("/skills-learned")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "disk gone" in body["error"]
+    assert body["total"] == 0 and body["latest_label"] == "none yet"
+
+
 def test_second_brain_route(tmp_path, monkeypatch):
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
     (tmp_path / "notes").mkdir()

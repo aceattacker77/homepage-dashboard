@@ -104,6 +104,20 @@ def test_added_since_uses_git_history(tmp_path, no_parent_repo):
     assert paths == ["inbox/new.md", "notes/untracked.md"]
 
 
+def test_git_exe_prefers_real_binary_over_cmd_launcher(tmp_path, monkeypatch):
+    # Git for Windows' cmd\git.exe is a launcher; killing it on timeout leaves
+    # the real git running and holding the pipe.
+    launcher = tmp_path / "Git" / "cmd" / "git.exe"
+    real = tmp_path / "Git" / "mingw64" / "bin" / "git.exe"
+    for p in (launcher, real):
+        p.parent.mkdir(parents=True)
+        p.write_bytes(b"")
+    monkeypatch.setattr(sb.shutil, "which", lambda _name: str(launcher))
+    assert sb._git_exe() == str(real)
+    real.unlink()
+    assert sb._git_exe() == str(launcher)
+
+
 def test_added_since_without_git_falls_back_to_mtime(tmp_path, no_parent_repo):
     write(tmp_path, "notes/fresh.md")
     paths, source = sb.added_since(tmp_path, MONDAY)
