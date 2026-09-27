@@ -1,0 +1,222 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/services/
+
+# ---------------------------------------------------------------------------
+# Hermes agent status. All five widgets are Custom API widgets backed by the
+# local read-only status API (C:/Users/Admin/docker/homepage/status-api).
+# The base URL comes from HOMEPAGE_VAR_STATUS_API in docker-compose.yml --
+# widgets are fetched server-side from inside the container, so "localhost"
+# would resolve to the container itself, hence host.docker.internal.
+# ---------------------------------------------------------------------------
+- Hermes Agents:
+    - Agent Status:
+        icon: mdi-robot
+        description: Worker + builder liveness, last activity
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/hermes-status"
+          refreshInterval: 15000
+          display: list
+          mappings:
+            - field: worker_summary
+              label: Worker
+            - field: builder_summary
+              label: Builder
+            - field: agents_online
+              label: Online
+
+    - OpenRouter Credits:
+        icon: mdi-currency-usd
+        description: Current OpenRouter balance
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/openrouter-credits"
+          refreshInterval: 120000
+          mappings:
+            - field: remaining_label
+              label: Remaining
+            - field: used_label
+              label: Used
+            - field: used_percent_label
+              label: Usage
+
+    - Cron Jobs:
+        icon: mdi-clock-outline
+        description: Hermes cron schedule and last run result
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/cron-status"
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: jobs
+            name: name
+            label: summary
+            limit: 5
+
+    - Headlines:
+        icon: si-rss
+        description: Latest headlines from rss_feeds.json
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/rss-digest"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 6
+
+    - GPU:
+        icon: si-nvidia
+        description: Host GPU via nvidia-smi
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/gpu-status"
+          refreshInterval: 10000
+          mappings:
+            - field: utilization_label
+              label: GPU
+            - field: vram_label
+              label: VRAM
+            - field: temperature_label
+              label: Temp
+            - field: power_label
+              label: Power
+
+# ---------------------------------------------------------------------------
+# YouTube uploads, one Custom API card per channel.
+#
+# NOTE: Homepage has no native RSS/YouTube widget (verified against
+# src/widgets/ and src/components/widgets/ at v2.3.0 and dev -- the only
+# rss-ish entry is the unrelated "freshrss" service widget), so these use the
+# Custom API widget. Channel IDs were each resolved from the live channel page
+# and confirmed against the name YouTube's own feed reports; the card title is
+# that verified channel name, so a wrong ID would be visible here.
+#
+# Dashboard-only: separate from rss_feeds.json and the digest pipeline.
+# ---------------------------------------------------------------------------
+- YouTube:
+    - Asmongold TV:
+        icon: si-youtube
+        description: "@AsmonTV · uploads"
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/youtube-feeds?channel=asmongold"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 5
+            target: "https://www.youtube.com/watch?v={video_id}"
+
+    - Patrick Boyle:
+        icon: si-youtube
+        description: "@PBoyle · uploads"
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/youtube-feeds?channel=patrickboyle"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 5
+            target: "https://www.youtube.com/watch?v={video_id}"
+
+    - Matt Wolfe:
+        icon: si-youtube
+        description: "@mreflow · uploads"
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/youtube-feeds?channel=mattwolfe"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 5
+            target: "https://www.youtube.com/watch?v={video_id}"
+
+    - ESPN FC:
+        icon: si-youtube
+        description: "@ESPNFC · uploads"
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/youtube-feeds?channel=espnfc"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 5
+            target: "https://www.youtube.com/watch?v={video_id}"
+
+    - MIRAGE OVERDRIVE JP:
+        icon: si-youtube
+        description: "@MIRAGEOVERDRIVEJP · uploads"
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/youtube-feeds?channel=mirageoverdrive"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 5
+            target: "https://www.youtube.com/watch?v={video_id}"
+
+    - TechLead:
+        icon: si-youtube
+        description: "@TechLead · uploads"
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/youtube-feeds?channel=techlead"
+          refreshInterval: 600000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: label
+            limit: 5
+            target: "https://www.youtube.com/watch?v={video_id}"
+
+# ---------------------------------------------------------------------------
+# Container list. Each card is bound to a running container via the
+# `my-docker` server defined in docker.yaml, so Homepage shows live container
+# state plus per-container CPU/RAM stats.
+# ---------------------------------------------------------------------------
+- Infrastructure:
+    - Homepage:
+        icon: mdi-view-dashboard
+        href: "http://localhost:3000"
+        description: "This dashboard"
+        server: my-docker
+        container: homepage
+    - FreshRSS:
+        icon: freshrss.png
+        href: "http://localhost:8080"
+        description: "RSS aggregator"
+        server: my-docker
+        container: freshrss
+
+- Downloads:
+    - JDownloader 2:
+        icon: jdownloader.png
+        href: "http://localhost:5800"
+        description: "Web Download Manager"
+        server: my-docker
+        container: jdownloader-2
+        widget:
+          type: jdownloader
+          username: "{{HOMEPAGE_VAR_JD_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_JD_PASSWORD}}"
+          device: "JDownloader@Admin"

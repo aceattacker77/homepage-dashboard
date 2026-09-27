@@ -1,0 +1,16 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/info-widgets/
+
+# System resources for this box. CPU/RAM/disk are reported inside the
+# container; the host GPU is surfaced separately via /gpu-status (Homepage's
+# resources widget has no GPU option -- only the Glances widget does).
+- resources:
+    cpu: true
+    memory: true
+    disk: /
+    uptime: true
+
+- search:
+    provider: duckduckgo
+    target: _blank

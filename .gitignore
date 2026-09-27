@@ -1,0 +1,13 @@
+# Secrets for compose substitution
+.env
+# Status API runtime artefacts
+status-api/.venv/
+status-api/*.log
+status-api/*.log.1
+status-api/state/
+__pycache__/
+.pytest_cache/
+# Homepage's own logs
+config/logs/
+# Plan execution scratch (ledger)
+.superpowers/

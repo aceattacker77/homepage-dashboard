@@ -1,0 +1,45 @@
+{
+  "_comment": "YouTube channels for the Homepage 'YouTube' widget group. Dashboard-only: these are NOT part of rss_feeds.json or the digest pipeline. Each channel_id was resolved from the live YouTube channel page (externalId + vanityChannelUrl) and then confirmed against the channel name returned by YouTube's own feed at https://www.youtube.com/feeds/videos.xml?channel_id=<id>.",
+  "_verified_on": "2026-09-20",
+  "channels": [
+    {
+      "key": "asmongold",
+      "name": "Asmongold TV",
+      "handle": "@AsmonTV",
+      "channel_id": "UCQeRaTukNYft1_6AZPACnog",
+      "note": "@AsmongoldTV 404s - that handle does not exist. Real handle is @AsmonTV."
+    },
+    {
+      "key": "patrickboyle",
+      "name": "Patrick Boyle",
+      "handle": "@PBoyle",
+      "channel_id": "UCASM0cgfkJxQ1ICmRilfHLw"
+    },
+    {
+      "key": "mattwolfe",
+      "name": "Matt Wolfe",
+      "handle": "@mreflow",
+      "channel_id": "UChpleBmo18P08aKCIgti38g"
+    },
+    {
+      "key": "espnfc",
+      "name": "ESPN FC",
+      "handle": "@ESPNFC",
+      "channel_id": "UC6c1z7bA__85CIWZ_jpCK-Q",
+      "note": "The first 'channelId' string on the page is UCiWLfSweyRNmLpgEHekhoAg, which is the ESPN channel - a different channel. externalId is the correct one."
+    },
+    {
+      "key": "mirageoverdrive",
+      "name": "MIRAGE OVERDRIVE JP",
+      "handle": "@MIRAGEOVERDRIVEJP",
+      "channel_id": "UCrReRqMJTz-ktKuY7LUgP6A",
+      "note": "Handle was unconfirmed in the brief; resolved by search then verified against the channel page. A separate auto-generated 'MIRAGE OVERDRIVE JP - Topic' channel (UCL6oTafDOMK3dxf28qyMlTA) also exists and is deliberately NOT used; this is the artist's own channel."
+    },
+    {
+      "key": "techlead",
+      "name": "TechLead",
+      "handle": "@TechLead",
+      "channel_id": "UC4xKdmAXFh4ACyhpiQ_3qBw"
+    }
+  ]
+}

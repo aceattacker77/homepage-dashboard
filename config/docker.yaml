@@ -1,0 +1,10 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/docker/
+#
+# The socket is bind-mounted read-only in docker-compose.yml
+# (`//var/run/docker.sock:/var/run/docker.sock:ro`). This gives Homepage the
+# container list plus per-container CPU/RAM stats on the Infrastructure cards.
+
+my-docker:
+  socket: /var/run/docker.sock

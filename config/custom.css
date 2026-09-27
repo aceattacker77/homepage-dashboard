@@ -1,0 +1,23 @@
+/* Force Deep Space Background */
+html, body, #__next {
+  background-color: #0d0e15 !important;
+  background-image: radial-gradient(circle at 50% 50%, #1a1c29 0%, #0d0e15 100%) !important;
+}
+
+/* Target Homepage Cards & Service Blocks */
+div[class*="bg-"] {
+  border: 1px solid #00f0ff !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25) !important;
+}
+
+/* Hover Effect for Cards */
+div[class*="bg-"]:hover {
+  border-color: #ff007f !important;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.5) !important;
+}
+
+/* Header & Text Accents */
+h1, h2, h3, p, span {
+  color: #00f0ff !important;
+  text-shadow: 0 0 3px rgba(0, 240, 255, 0.4);
+}

@@ -1,0 +1,23 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    ports:
+      - "3000:3000"
+    volumes:
+      - C:/Users/Admin/docker/homepage/config:/app/config:rw
+      # Read-only Docker socket: powers the container list + per-container
+      # CPU/RAM stats on the Infrastructure cards. Mounted :ro deliberately.
+      - //var/run/docker.sock:/var/run/docker.sock:ro
+    extra_hosts:
+      # Lets the container reach the host-run Hermes status API (port 8787).
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Single source of truth for the status API base URL used by widgets.yaml
+      # and services.yaml via {{HOMEPAGE_VAR_STATUS_API}}.
+      - HOMEPAGE_VAR_STATUS_API=http://host.docker.internal:8787
+      # JDownloader (my.jdownloader.org) login for the Downloads card. Values
+      # live in the gitignored .env next to this file.
+      - HOMEPAGE_VAR_JD_USERNAME=${JD_USERNAME}
+      - HOMEPAGE_VAR_JD_PASSWORD=${JD_PASSWORD}
+    restart: unless-stopped

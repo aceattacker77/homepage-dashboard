@@ -1,0 +1,42 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/settings/
+
+title: CYBER://HUB
+theme: dark
+color: slate
+
+# Header & Search Bar Setup
+headerStyle: boxed
+search:
+  provider: google 
+  target: _blank
+  focus: true
+
+# Cyberpunk UI Layout Options
+layout:
+  Downloads:
+    style: grid
+    columns: 2
+  Infrastructure:
+    style: grid
+    columns: 2
+  Hermes Agents:
+    style: grid
+    columns: 3
+  YouTube:
+    style: grid
+    columns: 3
+
+# Status Indicators
+providers:
+  status:
+    style: dot
+
+# Card Style Tweaks
+cardBlur: sm
+showStats: true
+
+#providers:
+  #openweathermap: openweathermapapikey
+  #weatherapi: weatherapiapikey
