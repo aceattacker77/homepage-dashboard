@@ -1,23 +1,101 @@
-/* Force Deep Space Background */
-html, body, #__next {
-  background-color: #0d0e15 !important;
-  background-image: radial-gradient(circle at 50% 50%, #1a1c29 0%, #0d0e15 100%) !important;
+/* ---------------------------------------------------------------------------
+   CYBER://HUB -- soft glass theme.
+   Targets Homepage's semantic classes (.service-card, .service-block, ...)
+   rather than Tailwind utility classes, which change between releases.
+   --------------------------------------------------------------------------- */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+:root {
+  --glass-fill: rgba(255, 255, 255, 0.06);
+  --glass-fill-hover: rgba(255, 255, 255, 0.09);
+  --glass-inset: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 8px 32px rgba(4, 6, 20, 0.28);
+  --text-strong: #eef0f7;
+  --text-muted: #9aa3b8;
+  --accent: #b8a6ff;
+  --radius-card: 16px;
+  --radius-inset: 10px;
 }
 
-/* Target Homepage Cards & Service Blocks */
-div[class*="bg-"] {
-  border: 1px solid #00f0ff !important;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25) !important;
+/* Background: soft indigo -> slate -> teal wash */
+html {
+  background-color: #12141f !important;
+}
+/* #__next must stay transparent or it hides the gradient painted on body. */
+#__next {
+  background: transparent !important;
+}
+body {
+  background-color: #12141f !important;
+  background-image:
+    radial-gradient(1200px 800px at 12% 8%, rgba(99, 102, 241, 0.26), transparent 60%),
+    radial-gradient(1000px 700px at 88% 92%, rgba(45, 212, 191, 0.13), transparent 60%),
+    linear-gradient(160deg, #171a2b 0%, #12141f 55%, #0f1a24 100%) !important;
+  background-attachment: fixed !important;
+}
+body, #__next {
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text-strong);
 }
 
-/* Hover Effect for Cards */
-div[class*="bg-"]:hover {
-  border-color: #ff007f !important;
-  box-shadow: 0 0 15px rgba(255, 0, 127, 0.5) !important;
+/* Cards */
+.service-card,
+#information-widgets {
+  background: var(--glass-fill) !important;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--glass-shadow) !important;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+.service-card {
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.service-card:hover {
+  background: var(--glass-fill-hover) !important;
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .service-card, .service-card:hover { transition: none; transform: none; }
 }
 
-/* Header & Text Accents */
-h1, h2, h3, p, span {
-  color: #00f0ff !important;
-  text-shadow: 0 0 3px rgba(0, 240, 255, 0.4);
+/* Inner stat blocks and list rows */
+.service-block,
+.service-container .rounded-sm {
+  background: var(--glass-inset) !important;
+  border-radius: var(--radius-inset) !important;
+}
+
+/* Values strong, labels muted: block = value then label; row = name then value */
+.service-block > div:first-child { color: var(--text-strong); font-weight: 500; }
+.service-block > div:last-child  { color: var(--text-muted); letter-spacing: 0.06em; }
+.service-container .font-thin    { color: var(--text-muted); }
+.service-container .font-bold    { color: var(--text-strong); font-weight: 500; }
+
+/* Headings and text */
+.service-group-name,
+.bookmark-group-name {
+  color: var(--text-strong) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.service-name,
+.service-title-text {
+  color: var(--text-strong) !important;
+  font-weight: 600;
+}
+.service-description {
+  color: var(--text-muted) !important;
+}
+
+/* The one accent colour: hovered links */
+.service-card a:hover,
+.bookmark:hover .bookmark-name {
+  color: var(--accent) !important;
 }
