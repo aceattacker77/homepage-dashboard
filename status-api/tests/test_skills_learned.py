@@ -41,6 +41,17 @@ def test_seed_date_uses_earliest_copy(tmp_path):
     assert sl.seed_date([new, old], TODAY) == date(2026, 9, 10)
 
 
+def test_seed_date_ignores_vendored_dependencies(tmp_path):
+    # file-cleanup ships a .venv whose package files keep their release dates.
+    skill = make_skill(str(tmp_path / "a"), "file-cleanup", on=date(2026, 9, 27))
+    for rel in (".venv/Lib/site-packages/pygments/__init__.py", "scripts/helper.py"):
+        path = os.path.join(skill, *rel.split("/"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        open(path, "w").close()
+        os.utime(path, (_ts(date(2026, 8, 5)), _ts(date(2026, 8, 5))))
+    assert sl.seed_date([skill], TODAY) == date(2026, 9, 27)
+
+
 def test_seed_date_empty_falls_back_to_today(tmp_path):
     empty = tmp_path / "empty"
     empty.mkdir()

@@ -30,21 +30,21 @@ def collect_skills(trees):
 
 
 def seed_date(skill_dirs, today):
-    """Earliest creation/modification time of any file in any copy.
+    """Earliest creation/modification time of SKILL.md across all copies.
 
-    On Windows st_ctime is the creation time; min() with st_mtime also covers
+    Only SKILL.md: other files can be vendored (a skill's .venv keeps each
+    package's release date) and would drag the date back by months. On
+    Windows st_ctime is the creation time; min() with st_mtime also covers
     copies that kept an older modification time.
     """
     earliest = None
     for skill_dir in skill_dirs:
-        for root, _dirs, files in os.walk(skill_dir):
-            for name in files:
-                try:
-                    st = os.stat(os.path.join(root, name))
-                except OSError:
-                    continue
-                t = min(st.st_ctime, st.st_mtime)
-                earliest = t if earliest is None else min(earliest, t)
+        try:
+            st = os.stat(os.path.join(skill_dir, "SKILL.md"))
+        except OSError:
+            continue
+        t = min(st.st_ctime, st.st_mtime)
+        earliest = t if earliest is None else min(earliest, t)
     if earliest is None:
         return today
     return datetime.fromtimestamp(earliest).date()
