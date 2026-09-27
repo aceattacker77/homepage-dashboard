@@ -15,7 +15,7 @@ Exposes JSON endpoints consumed by Homepage `customapi` widgets:
 STRICTLY READ-ONLY. It never creates, edits, pauses or fires a cron job, and
 never sends messages. It only reads Hermes state files and the second-brain
 vault, shells out to read-only commands (nvidia-smi, git log/ls-files), and
-writes nothing but its own state/skills_ledger.json.
+writes nothing but its own state/ (skills ledger, note of the day).
 
 Run:  python status_api.py       (binds 0.0.0.0:8787)
 """
@@ -74,7 +74,7 @@ GPU_CACHE_TTL = 5
 USER_AGENT = "Mozilla/5.0 (compatible; HermesStatusAPI/1.0)"
 
 # Skills Learned card. Names in hermes-agent's own trees are "bundled", not
-# learned. The ledger is this API's only write -- its own state, not Hermes'.
+# learned. The ledger lives in this API's own state/ dir, not Hermes'.
 BUNDLED_SKILL_TREES = [
     os.path.join(HERMES_BASE, "hermes-agent", "skills"),
     os.path.join(HERMES_BASE, "hermes-agent", "optional-skills"),
@@ -86,6 +86,8 @@ SKILLS_CACHE_TTL = 300
 SECOND_BRAIN_DIR = os.environ.get("SECOND_BRAIN_DIR", r"C:\Users\Admin\second-brain")
 SECOND_BRAIN_VAULT = os.environ.get("SECOND_BRAIN_VAULT", "second-brain")
 SECOND_BRAIN_CACHE_TTL = 300
+# Today's pick, remembered so new notes don't reshuffle it mid-day.
+NOTE_OF_DAY_STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state", "note_of_day.json")
 
 
 def skill_trees():
@@ -973,7 +975,7 @@ def skills_learned_route():
 def build_second_brain_card():
     try:
         return second_brain.build_second_brain(
-            SECOND_BRAIN_DIR, SECOND_BRAIN_VAULT, datetime.now().astimezone())
+            SECOND_BRAIN_DIR, SECOND_BRAIN_VAULT, datetime.now().astimezone(), NOTE_OF_DAY_STATE)
     except (OSError, ValueError) as exc:
         # Keep the card rendering (with the reason) instead of a 500.
         return {"error": f"{type(exc).__name__}: {exc}",

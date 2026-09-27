@@ -1,6 +1,14 @@
+import pytest
 from fastapi.testclient import TestClient
 
 import status_api
+
+
+@pytest.fixture(autouse=True)
+def isolated_state(tmp_path, monkeypatch):
+    # Never touch the live API's state/ files from tests.
+    monkeypatch.setattr(status_api, "NOTE_OF_DAY_STATE", str(tmp_path / "state" / "note.json"))
+    monkeypatch.setattr(status_api, "SKILLS_LEDGER", str(tmp_path / "state" / "ledger.json"))
 
 
 def _reset(name):

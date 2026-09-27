@@ -2,12 +2,15 @@
 
 Read-only against the vault: it reads Markdown files and runs `git log` /
 `git ls-files`, never writes or commits. One note is picked per day from a
-hash of the date, so the pick is stable all day with no stored state.
+hash of the date and remembered in the API's own state file, so it stays
+put all day even as new notes arrive.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import re
 import shutil
 import subprocess
@@ -50,6 +53,36 @@ def pick_note(pool, day):
         return None
     digest = hashlib.sha256(day.isoformat().encode("ascii")).hexdigest()
     return pool[int(digest, 16) % len(pool)]
+
+
+def todays_note(pool, day, state_path=None):
+    """pick_note, but remembered for the day in `state_path`.
+
+    A pure hash pick moves whenever the pool grows (Hermes files a weekly
+    review at 20:00), so the day's pick is saved and reused until tomorrow,
+    or until that note leaves the pool. The state file is this API's own; it
+    never lives in the vault. Without a state path, or if it can't be read or
+    written, this falls back to the stateless pick.
+    """
+    if state_path:
+        try:
+            with open(state_path, encoding="utf-8") as fh:
+                saved = json.load(fh)
+            if saved.get("date") == day.isoformat() and saved.get("path") in pool:
+                return saved["path"]
+        except (OSError, ValueError, AttributeError):
+            pass
+    rel = pick_note(pool, day)
+    if state_path and rel:
+        try:
+            os.makedirs(os.path.dirname(state_path), exist_ok=True)
+            tmp = state_path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump({"date": day.isoformat(), "path": rel}, fh)
+            os.replace(tmp, state_path)
+        except OSError:
+            pass
+    return rel
 
 
 def parse_note(text, fallback_title):
@@ -139,13 +172,13 @@ def added_since(vault, since):
     return kept, source
 
 
-def build_second_brain(vault, vault_name, now):
+def build_second_brain(vault, vault_name, now, state_path=None):
     vault = Path(vault)
     if not vault.is_dir():
         raise FileNotFoundError(f"vault not found: {vault}")
 
     pool = note_pool(vault)
-    rel = pick_note(pool, now.date())
+    rel = todays_note(pool, now.date(), state_path)
     vault_uri = obsidian_uri(vault_name)
     if rel:
         text = (vault / rel).read_text(encoding="utf-8", errors="replace")

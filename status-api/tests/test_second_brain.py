@@ -146,6 +146,45 @@ def test_added_label_shows_top_two_folders(tmp_path, no_parent_repo):
     assert out["added_breakdown"] == "1 inbox · 3 projects · 1 reviews · 2 root"
 
 
+def _pool_vault(vault, n=8):
+    for i in range(n):
+        write(vault, f"notes/n{i}.md", f"# Note {i}\n\nBody {i}.\n")
+
+
+def test_note_of_day_survives_new_notes(tmp_path, no_parent_repo):
+    vault, state = tmp_path / "v", str(tmp_path / "state" / "note.json")
+    _pool_vault(vault)
+    first = sb.build_second_brain(vault, "sb", NOW, state)["note_path"]
+    for i in range(8, 20):                      # a busy evening of captures
+        write(vault, f"reviews/r{i}.md")
+        assert sb.build_second_brain(vault, "sb", NOW, state)["note_path"] == first
+
+
+def test_note_of_day_changes_next_day(tmp_path, no_parent_repo):
+    vault, state = tmp_path / "v", str(tmp_path / "note.json")
+    _pool_vault(vault, 50)
+    picks = {sb.build_second_brain(vault, "sb", NOW + timedelta(days=d), state)["note_path"]
+             for d in range(10)}
+    assert len(picks) > 1
+
+
+def test_note_of_day_repicks_when_note_removed(tmp_path, no_parent_repo):
+    vault, state = tmp_path / "v", str(tmp_path / "note.json")
+    _pool_vault(vault)
+    first = sb.build_second_brain(vault, "sb", NOW, state)["note_path"]
+    (vault / first).unlink()
+    second = sb.build_second_brain(vault, "sb", NOW, state)["note_path"]
+    assert second and second != first
+
+
+def test_note_of_day_ignores_corrupt_state(tmp_path, no_parent_repo):
+    vault, state = tmp_path / "v", tmp_path / "note.json"
+    _pool_vault(vault)
+    state.write_text("{nope", encoding="utf-8")
+    out = sb.build_second_brain(vault, "sb", NOW, str(state))
+    assert out["note_path"] == sb.pick_note(sb.note_pool(vault), NOW.date())
+
+
 def test_build_second_brain_empty_vault(tmp_path, no_parent_repo):
     out = sb.build_second_brain(tmp_path, "second-brain", NOW)
     assert out["note_title"] == "No notes yet"

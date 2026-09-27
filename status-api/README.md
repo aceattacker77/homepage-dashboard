@@ -100,8 +100,12 @@ The first sighting is seeded from the earliest creation/modification time
 of `SKILL.md` across every copy of that skill (other files are ignored: a
 skill's `.venv` keeps each package's release date). After that, edits,
 copies and backup restores cannot move it. Malformed entries are dropped and
-re-seeded. Delete the file to re-seed everything. It is gitignored and is
-this API's only write.
+re-seeded. Delete the file to re-seed everything. It is gitignored.
+
+`state/note_of_day.json` remembers the Second Brain pick for the day, so a
+note filed mid-day (e.g. the 20:00 weekly review) doesn't swap it. It re-picks
+at midnight or if that note leaves the pool. These two files in `state/` are
+this API's only writes; it never writes to the vault or Hermes.
 
 ## Tests
 
