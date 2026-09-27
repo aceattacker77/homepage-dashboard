@@ -19,6 +19,8 @@ It only **reads** Hermes state files and shells out to read-only commands
 | `/youtube-feeds?channel=<key>` | YouTube (one card per channel) | `youtube_channels.json` + YouTube's public feed |
 | `/youtube-channels` | — (index of configured channels) | `youtube_channels.json` |
 | `/gpu-status` | GPU | `nvidia-smi` on the host |
+| `/skills-learned` | Skills Learned | `skills/` + `profiles/*/skills/` vs bundled `hermes-agent/{skills,optional-skills}`; `state/skills_ledger.json` |
+| `/second-brain` | Second Brain | `C:\Users\Admin\second-brain` (files + `git log`, read-only) |
 
 Port **8787**. Binds `0.0.0.0` so the Homepage container can reach it.
 
@@ -91,12 +93,29 @@ depend on the Hermes venv.
   Glances widget does), so the host GPU is surfaced here via `nvidia-smi`
   rather than by adding a Glances container.
 
+## Skills ledger
+
+`state/skills_ledger.json` freezes the date each skill name was first seen.
+The first sighting is seeded from the earliest creation/modification time
+of any file in any copy of that skill. After that, edits, copies and backup
+restores cannot move it. Delete the file to re-seed from timestamps. It is
+gitignored and is this API's only write.
+
+## Tests
+
+```bash
+.venv/Scripts/python.exe -m pip install -r requirements-dev.txt
+.venv/Scripts/python.exe -m pytest -q
+```
+
 ## Environment variables
 
 | Var | Default | Purpose |
 |---|---|---|
 | `HERMES_STATUS_PORT` | `8787` | Listen port |
 | `HERMES_BASE` | `C:\Users\Admin\AppData\Local\hermes` | Hermes base dir (default profile = worker agent) |
+| `SECOND_BRAIN_DIR` | `C:\Users\Admin\second-brain` | Obsidian vault folder |
+| `SECOND_BRAIN_VAULT` | `second-brain` | Vault name used in `obsidian://` links |
 
 `OPENROUTER_API_KEY` is read from `$HERMES_HOME/.env`
 (`profiles/hermes-builder/.env`), falling back to the base `.env`, then the

@@ -9,10 +9,13 @@ Exposes JSON endpoints consumed by Homepage `customapi` widgets:
   /cron-status         Hermes cron jobs, next run, last run result
   /rss-digest          latest headlines from rss_feeds.json (no Telegram send)
   /gpu-status          host GPU metrics (bonus -- Homepage resources widget has no GPU)
+  /skills-learned      new (non-bundled) Hermes skills per week
+  /second-brain        note of the day + notes added this week from the vault
 
 STRICTLY READ-ONLY. It never creates, edits, pauses or fires a cron job, and
-never sends messages. It only reads Hermes state files and shells out to
-read-only commands (nvidia-smi, hermes cron list).
+never sends messages. It only reads Hermes state files and the second-brain
+vault, shells out to read-only commands (nvidia-smi, git log/ls-files), and
+writes nothing but its own state/skills_ledger.json.
 
 Run:  python status_api.py       (binds 0.0.0.0:8787)
 """
@@ -21,6 +24,7 @@ from __future__ import annotations
 
 import concurrent.futures as futures
 import ctypes
+import glob
 import json
 import os
 import re
@@ -36,6 +40,9 @@ from email.utils import parsedate_to_datetime
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+
+import second_brain
+import skills_learned
 
 # --------------------------------------------------------------------------
 # Configuration
@@ -66,6 +73,26 @@ GPU_CACHE_TTL = 5
 
 USER_AGENT = "Mozilla/5.0 (compatible; HermesStatusAPI/1.0)"
 
+# Skills Learned card. Names in hermes-agent's own trees are "bundled", not
+# learned. The ledger is this API's only write -- its own state, not Hermes'.
+BUNDLED_SKILL_TREES = [
+    os.path.join(HERMES_BASE, "hermes-agent", "skills"),
+    os.path.join(HERMES_BASE, "hermes-agent", "optional-skills"),
+]
+SKILLS_LEDGER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state", "skills_ledger.json")
+SKILLS_CACHE_TTL = 300
+
+# Second Brain card (read-only against the vault).
+SECOND_BRAIN_DIR = os.environ.get("SECOND_BRAIN_DIR", r"C:\Users\Admin\second-brain")
+SECOND_BRAIN_VAULT = os.environ.get("SECOND_BRAIN_VAULT", "second-brain")
+SECOND_BRAIN_CACHE_TTL = 300
+
+
+def skill_trees():
+    """Base skills plus every profile's, re-globbed so new profiles appear."""
+    return [os.path.join(HERMES_BASE, "skills")] + sorted(
+        glob.glob(os.path.join(HERMES_PROFILES_DIR, "*", "skills")))
+
 # Must match the category_map in scripts/fetch_and_summarize.py so the widget
 # reads the same way as the 18:00 Telegram digest.
 CATEGORY_MAP = {
@@ -89,7 +116,7 @@ def _cache():
     return {"value": None, "expires": 0.0, "lock": threading.Lock()}
 
 
-_CACHES = {name: _cache() for name in ("cron", "rss", "credits", "gpu")}
+_CACHES = {name: _cache() for name in ("cron", "rss", "credits", "gpu", "skills", "brain")}
 
 
 def cached(name, ttl, producer):
@@ -918,6 +945,35 @@ def gpu_status():
     except Exception as exc:
         return JSONResponse({"status": "error", "available": False, "label": "error",
                              "name": f"{type(exc).__name__}: {exc}"})
+
+
+# --------------------------------------------------------------------------
+# 7. /skills-learned
+# --------------------------------------------------------------------------
+
+@app.get("/skills-learned")
+def skills_learned_route():
+    return JSONResponse(cached("skills", SKILLS_CACHE_TTL, lambda: skills_learned.build_skills_learned(
+        skill_trees(), BUNDLED_SKILL_TREES, SKILLS_LEDGER, datetime.now().date())))
+
+
+# --------------------------------------------------------------------------
+# 8. /second-brain
+# --------------------------------------------------------------------------
+
+def build_second_brain_card():
+    try:
+        return second_brain.build_second_brain(
+            SECOND_BRAIN_DIR, SECOND_BRAIN_VAULT, datetime.now().astimezone())
+    except (OSError, ValueError) as exc:
+        # Keep the card rendering (with the reason) instead of a 500.
+        return {"error": f"{type(exc).__name__}: {exc}",
+                "items": [{"name": "Vault unavailable", "label": str(exc), "href": ""}]}
+
+
+@app.get("/second-brain")
+def second_brain_route():
+    return JSONResponse(cached("brain", SECOND_BRAIN_CACHE_TTL, build_second_brain_card))
 
 
 # --------------------------------------------------------------------------
