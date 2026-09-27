@@ -261,3 +261,22 @@
           username: "{{HOMEPAGE_VAR_JD_USERNAME}}"
           password: "{{HOMEPAGE_VAR_JD_PASSWORD}}"
           device: "JDownloader@Admin"
+
+    # Written by the MusicBee plugin in musicbee-plugin/ -> status API.
+    - Now Playing:
+        icon: mdi-music-circle
+        description: MusicBee
+        widget:
+          type: customapi
+          url: "{{HOMEPAGE_VAR_STATUS_API}}/now-playing"
+          refreshInterval: 5000
+          display: list
+          mappings:
+            - field: title
+              label: Track
+            - field: artist
+              label: Artist
+            - field: album
+              label: Album
+            - field: status_line
+              label: Status

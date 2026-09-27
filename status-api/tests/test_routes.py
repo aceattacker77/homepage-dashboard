@@ -41,6 +41,14 @@ def test_skills_learned_route_survives_errors(monkeypatch):
     assert body["total"] == 0 and body["latest_label"] == "none yet"
 
 
+def test_now_playing_route(tmp_path, monkeypatch):
+    monkeypatch.setattr(status_api, "NOW_PLAYING_FILE", str(tmp_path / "nowplaying.json"))
+    _reset("nowplaying")
+    resp = TestClient(status_api.app).get("/now-playing")
+    assert resp.status_code == 200
+    assert resp.json()["state"] == "no-data"
+
+
 def test_second_brain_route(tmp_path, monkeypatch):
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
     (tmp_path / "notes").mkdir()

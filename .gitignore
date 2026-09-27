@@ -11,3 +11,5 @@ __pycache__/
 config/logs/
 # Plan execution scratch (ledger)
 .superpowers/
+# MusicBee plugin build output
+musicbee-plugin/bin/

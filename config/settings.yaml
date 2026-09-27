@@ -24,7 +24,7 @@ layout:
     columns: 3
   Infrastructure:
     style: row
-    columns: 3
+    columns: 4
   YouTube:
     style: row
     columns: 3

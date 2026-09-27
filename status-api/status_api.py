@@ -11,6 +11,7 @@ Exposes JSON endpoints consumed by Homepage `customapi` widgets:
   /gpu-status          host GPU metrics (bonus -- Homepage resources widget has no GPU)
   /skills-learned      new (non-bundled) Hermes skills per week
   /second-brain        note of the day + notes added this week from the vault
+  /now-playing         MusicBee's current track (file written by musicbee-plugin/)
 
 STRICTLY READ-ONLY. It never creates, edits, pauses or fires a cron job, and
 never sends messages. It only reads Hermes state files and the second-brain
@@ -41,6 +42,7 @@ from email.utils import parsedate_to_datetime
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+import now_playing
 import second_brain
 import skills_learned
 
@@ -89,6 +91,13 @@ SECOND_BRAIN_CACHE_TTL = 300
 # Today's pick, remembered so new notes don't reshuffle it mid-day.
 NOTE_OF_DAY_STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state", "note_of_day.json")
 
+# Now Playing card: written by the MusicBee plugin in ../musicbee-plugin.
+NOW_PLAYING_FILE = os.environ.get(
+    "MUSICBEE_NOW_PLAYING",
+    os.path.join(os.environ.get("APPDATA", r"C:\Users\Admin\AppData\Roaming"),
+                 "MusicBee", "HomepageNowPlaying", "nowplaying.json"))
+NOW_PLAYING_CACHE_TTL = 2
+
 
 def skill_trees():
     """Base skills plus every profile's, re-globbed so new profiles appear."""
@@ -118,7 +127,7 @@ def _cache():
     return {"value": None, "expires": 0.0, "lock": threading.Lock()}
 
 
-_CACHES = {name: _cache() for name in ("cron", "rss", "credits", "gpu", "skills", "brain")}
+_CACHES = {name: _cache() for name in ("cron", "rss", "credits", "gpu", "skills", "brain", "nowplaying")}
 
 
 def cached(name, ttl, producer):
@@ -985,6 +994,16 @@ def build_second_brain_card():
 @app.get("/second-brain")
 def second_brain_route():
     return JSONResponse(cached("brain", SECOND_BRAIN_CACHE_TTL, build_second_brain_card))
+
+
+# --------------------------------------------------------------------------
+# 9. /now-playing
+# --------------------------------------------------------------------------
+
+@app.get("/now-playing")
+def now_playing_route():
+    return JSONResponse(cached("nowplaying", NOW_PLAYING_CACHE_TTL,
+                               lambda: now_playing.build_now_playing(NOW_PLAYING_FILE, now_utc())))
 
 
 # --------------------------------------------------------------------------
