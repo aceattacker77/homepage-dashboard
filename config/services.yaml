@@ -292,7 +292,7 @@
         description: File index
         widgets:
           - type: customapi
-            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C;C:%5CUsers%5CAdmin%5C.claude%5C;C:%5CProgram%20Files%20(x86)%5CSteam%5Cappcache%5C"
+            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C;C:%5CUsers%5CAdmin%5C.claude%5C;C:%5CProgram%20Files%20(x86)%5CSteam%5Cappcache%5C;%5C__pycache__%5C;status-api.log"
             username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
             password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
             refreshInterval: 60000
@@ -306,7 +306,7 @@
               - field: downloads_label
                 label: Downloads
           - type: customapi
-            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C;C:%5CUsers%5CAdmin%5C.claude%5C;C:%5CProgram%20Files%20(x86)%5CSteam%5Cappcache%5C"
+            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C;C:%5CUsers%5CAdmin%5C.claude%5C;C:%5CProgram%20Files%20(x86)%5CSteam%5Cappcache%5C;%5C__pycache__%5C;status-api.log"
             username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
             password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
             refreshInterval: 60000

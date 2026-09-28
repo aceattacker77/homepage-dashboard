@@ -35,6 +35,8 @@ DEFAULT_EXCLUDES = [
     r'"\.git\"',
     r'"C:\Users\Admin\.claude\"',
     r'"C:\Program Files (x86)\Steam\appcache\"',
+    r'"\__pycache__\"',
+    '"status-api.log"',
 ]
 DEFAULT_HUGE = "2gb"
 DOWNLOADS = r'"C:\Users\Admin\Downloads\"'
