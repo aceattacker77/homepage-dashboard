@@ -99,3 +99,20 @@ body, #__next {
 .bookmark:hover .bookmark-name {
   color: var(--accent) !important;
 }
+
+/* Everything card search bar (injected by custom.js) */
+.everything-search {
+  margin: 0.25rem 0.5rem 0.35rem;
+}
+.everything-search input {
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  color: inherit;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.375rem;
+  outline: none;
+}
+.everything-search input::placeholder { opacity: 0.55; }
+.everything-search input:focus { border-color: var(--glass-border-hover); }

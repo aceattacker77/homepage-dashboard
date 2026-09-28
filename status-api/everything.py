@@ -37,6 +37,8 @@ DEFAULT_EXCLUDES = [
     r'"C:\Program Files (x86)\Steam\appcache\"',
     r'"\__pycache__\"',
     '"status-api.log"',
+    r'"\GoogleUpdater\"',
+    r'"\.pytest_cache\"',
 ]
 DEFAULT_HUGE = "2gb"
 DOWNLOADS = r'"C:\Users\Admin\Downloads\"'
