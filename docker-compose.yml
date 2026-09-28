@@ -20,4 +20,8 @@ services:
       # live in the gitignored .env next to this file.
       - HOMEPAGE_VAR_JD_USERNAME=${JD_USERNAME}
       - HOMEPAGE_VAR_JD_PASSWORD=${JD_PASSWORD}
+      # voidtools Everything HTTP server login for the Everything card
+      # (forwarded by the status API, never stored). Values in .env.
+      - HOMEPAGE_VAR_EVERYTHING_USER=${EVERYTHING_USER}
+      - HOMEPAGE_VAR_EVERYTHING_PASS=${EVERYTHING_PASS}
     restart: unless-stopped

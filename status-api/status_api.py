@@ -12,6 +12,7 @@ Exposes JSON endpoints consumed by Homepage `customapi` widgets:
   /skills-learned      new (non-bundled) Hermes skills per week
   /second-brain        note of the day + notes added this week from the vault
   /now-playing         MusicBee's current track (file written by musicbee-plugin/)
+  /everything          voidtools Everything counts + recent files (auth passed through)
 
 STRICTLY READ-ONLY. It never creates, edits, pauses or fires a cron job, and
 never sends messages. It only reads Hermes state files and the second-brain
@@ -39,9 +40,10 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+import everything
 import now_playing
 import second_brain
 import skills_learned
@@ -97,6 +99,11 @@ NOW_PLAYING_FILE = os.environ.get(
     os.path.join(os.environ.get("APPDATA", r"C:\Users\Admin\AppData\Roaming"),
                  "MusicBee", "HomepageNowPlaying", "nowplaying.json"))
 NOW_PLAYING_CACHE_TTL = 2
+
+# Everything card: queries Everything's HTTP server; credentials arrive on each
+# request from Homepage (customapi username/password) and are only forwarded.
+EVERYTHING_URL = os.environ.get("EVERYTHING_URL", "http://127.0.0.1:8089")
+EVERYTHING_CACHE_TTL = 30
 
 
 def skill_trees():
@@ -1004,6 +1011,30 @@ def second_brain_route():
 def now_playing_route():
     return JSONResponse(cached("nowplaying", NOW_PLAYING_CACHE_TTL,
                                lambda: now_playing.build_now_playing(NOW_PLAYING_FILE, now_utc())))
+
+
+# --------------------------------------------------------------------------
+# 10. /everything
+# --------------------------------------------------------------------------
+
+@app.get("/everything")
+def everything_route(request: Request, url: str = "", exclude: str | None = None,
+                     huge: str = everything.DEFAULT_HUGE):
+    try:
+        base = everything.validate_url(url or EVERYTHING_URL)
+    except ValueError as exc:
+        return JSONResponse({"status": "error", "error": str(exc), "items": []})
+    if not re.fullmatch(r"\d+(\.\d+)?\s*[kmgt]?b?", huge.strip(), re.I):
+        huge = everything.DEFAULT_HUGE
+    auth = request.headers.get("authorization")
+    excludes = everything.parse_excludes(exclude)
+    # Cache per config + credentials so a wrong password is never served a hit.
+    name = "everything:" + str(hash((base, auth, tuple(excludes), huge)))
+    if name not in _CACHES:
+        _CACHES[name] = _cache()
+    fetch = lambda q, c, sort=False: everything.http_fetch(base, auth, q, c, sort)
+    return JSONResponse(cached(name, EVERYTHING_CACHE_TTL, lambda: everything.build_everything(
+        fetch, excludes, huge.strip(), int(time.time() * 1000))))
 
 
 # --------------------------------------------------------------------------

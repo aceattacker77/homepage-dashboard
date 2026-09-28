@@ -280,3 +280,38 @@
               label: Album
             - field: status_line
               label: Status
+
+    # voidtools Everything 1.5 HTTP server -> status API /everything.
+    # Homepage sends username/password as Basic auth; the status API forwards
+    # it to Everything and stores nothing. Options ride on the query string:
+    #   url      Everything HTTP server (as seen from the host)
+    #   exclude  paths to skip, ';'-separated (omit for the built-in defaults)
+    #   huge     "huge file" threshold for Everything's size: filter
+    - Everything:
+        icon: mdi-file-search
+        description: File index
+        widgets:
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C"
+            username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
+            password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
+            refreshInterval: 60000
+            mappings:
+              - field: indexed_label
+                label: Indexed
+              - field: changed_today_label
+                label: Today
+              - field: huge_label
+                label: Huge
+              - field: downloads_label
+                label: Downloads
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C"
+            username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
+            password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
+            refreshInterval: 60000
+            display: dynamic-list
+            mappings:
+              items: items
+              name: name
+              label: label
