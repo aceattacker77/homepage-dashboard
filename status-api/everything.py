@@ -24,6 +24,8 @@ from concurrent.futures import ThreadPoolExecutor
 FILETIME_EPOCH_MS = 11644473600000
 TIMEOUT_S = 8
 RECENT_COUNT = 5
+NAME_MAX = 28      # the card is narrow; longer names wrap onto several lines
+FOLDER_MAX = 18
 
 DEFAULT_EXCLUDES = [
     r'"C:\Users\Admin\AppData\"',
@@ -31,6 +33,8 @@ DEFAULT_EXCLUDES = [
     r'"C:\Windows\"',
     '"$Recycle.Bin"',
     r'"\.git\"',
+    r'"C:\Users\Admin\.claude\"',
+    r'"C:\Program Files (x86)\Steam\appcache\"',
 ]
 DEFAULT_HUGE = "2gb"
 DOWNLOADS = r'"C:\Users\Admin\Downloads\"'
@@ -54,6 +58,10 @@ def filetime_to_ms(value):
         return int(value) // 10000 - FILETIME_EPOCH_MS
     except (TypeError, ValueError):
         return None
+
+
+def truncate(text, limit):
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
 
 
 def human_size(value):
@@ -157,7 +165,8 @@ def build_everything(fetch, excludes, huge, now_ms):
         folder = ntpath.basename((r.get("path") or "").rstrip("\\")) or r.get("path") or "—"
         rel = ago(ms, now_ms)
         size = human_size(r.get("size"))
-        items.append({"name": r.get("name") or "?", "folder": folder, "path": r.get("path"),
+        folder = truncate(folder, FOLDER_MAX)
+        items.append({"name": truncate(r.get("name") or "?", NAME_MAX), "folder": folder, "path": r.get("path"),
                       "ago": rel, "size": size, "modified_ms": ms,
                       "label": f"{folder} · {rel} · {size}"})
 

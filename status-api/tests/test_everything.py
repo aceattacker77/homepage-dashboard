@@ -72,3 +72,16 @@ def test_validate_url_blocks_other_hosts():
             raise AssertionError(bad)
         except ValueError:
             pass
+
+
+def test_long_names_are_truncated():
+    def fetch(query, count, sort=False):
+        return {"totalResults": 1, "results": [
+            {"name": "4b3af7bf-165c-4cdb-af9c-8731499b4554.jsonl",
+             "path": r"C:\Users\Admin\.claude\projects\C--Users-Admin-AppData-Local-hermes",
+             "size": "1", "date_modified": FT_12M}]}
+    item = ev.build_everything(fetch, [], "2gb", NOW_MS)["items"][0]
+    assert len(item["name"]) == ev.NAME_MAX and item["name"].endswith("…")
+    assert len(item["folder"]) == ev.FOLDER_MAX and item["folder"].endswith("…")
+    assert item["label"].startswith(item["folder"] + " · ")
+    assert ev.truncate("short.txt", ev.NAME_MAX) == "short.txt"
