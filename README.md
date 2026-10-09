@@ -66,8 +66,11 @@ search box. At the bottom is a row of bookmarks.
    docker compose up -d                       # http://localhost:3000
    ```
 
-4. **Optional: the MusicBee card.** Run `musicbee-plugin\build.ps1 -Install`,
-   then restart MusicBee.
+4. **Optional: the MusicBee card.** Either download the prebuilt
+   `mb_HomepageNowPlaying.dll` from the
+   [v1.0.0 release](https://github.com/aceattacker77/musicbee-homepage-now-playing/releases/tag/v1.0.0)
+   into `%APPDATA%\MusicBee\Plugins`, or build it with
+   `musicbee-plugin\build.ps1 -Install`. Then restart MusicBee.
 
 The paths in `status-api/status_api.py` default to this machine's layout:
 `HERMES_BASE`, `SECOND_BRAIN_DIR` and `MUSICBEE_NOW_PLAYING`. Override them
@@ -85,7 +88,7 @@ documents each endpoint, its caching and its variables.
 | `config/custom.css` | The soft glass theme |
 | `config/bookmarks.yaml`, `docker.yaml` | Bookmarks; the Docker socket used for container stats |
 | `status-api/` | The JSON API behind the custom cards, with its tests |
-| `musicbee-plugin/` | The C# MusicBee plugin for Now Playing. A standalone copy lives at [aceattacker77/musicbee-homepage-now-playing](https://github.com/aceattacker77/musicbee-homepage-now-playing). |
+| `musicbee-plugin/` | The C# MusicBee plugin for Now Playing. A standalone copy lives at [aceattacker77/musicbee-homepage-now-playing](https://github.com/aceattacker77/musicbee-homepage-now-playing), with a prebuilt DLL in its [latest release](https://github.com/aceattacker77/musicbee-homepage-now-playing/releases/latest). |
 | `docs/superpowers/plans/` | The design and implementation plan for the Mind cards and the restyle |
 
 ## Customising

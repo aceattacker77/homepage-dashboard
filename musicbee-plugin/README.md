@@ -18,6 +18,11 @@ more than 20 s old the card shows "MusicBee closed".
 
 ## Build and install
 
+A prebuilt DLL, with its SHA-256 checksum, is in the
+[v1.0.0 release](https://github.com/aceattacker77/musicbee-homepage-now-playing/releases/tag/v1.0.0)
+of the standalone repo. Put it in `%APPDATA%\MusicBee\Plugins` and skip the
+build step. Or build it from this folder:
+
 ```powershell
 .\build.ps1 -Install   # builds bin\mb_HomepageNowPlaying.dll, copies it to %APPDATA%\MusicBee\Plugins
 ```
