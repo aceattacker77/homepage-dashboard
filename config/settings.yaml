@@ -21,7 +21,7 @@ layout:
     columns: 4
   Mind:
     style: row
-    columns: 3
+    columns: 4
   Infrastructure:
     style: row
     columns: 4

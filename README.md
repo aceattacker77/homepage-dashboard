@@ -28,6 +28,7 @@ nvidia-smi, RSS, YT ┘            ▲
 | **Mind** | Skills Learned | `/skills-learned` shows new (non-bundled) Hermes skills per week, an 8-week sparkline and the latest skill |
 | | Second Brain | `/second-brain` shows the note of the day from the Obsidian vault (it opens in Obsidian) and the notes added this week |
 | | Headlines | `/rss-digest` shows the latest items from `rss_feeds.json`; each headline links to its article |
+| | Files | `/everything` queries [Everything](https://www.voidtools.com) for two lists. **Recent** shows the newest documents, images, media and archives in Desktop, Documents, Downloads, Pictures, Videos and OneDrive. **Downloads > 30 days** shows the space you could reclaim, then the 3 biggest old files. Rows open in Everything's web UI; the search box opens a search there. |
 | **Infrastructure** | Homepage, FreshRSS | Docker container state plus CPU, RAM and network |
 | | JDownloader 2 | Homepage's native `jdownloader` widget (login from `.env`) |
 | | Now Playing | `/now-playing` shows MusicBee's current track (see [musicbee-plugin/](musicbee-plugin/README.md)) |
@@ -45,7 +46,9 @@ search box. At the bottom is a row of bookmarks.
 - Optional: an Obsidian vault kept in git, MusicBee, and an NVIDIA GPU.
 
 1. **Secrets.** Copy `.env.example` to `.env`, then fill in `JD_USERNAME` and
-   `JD_PASSWORD`. `.env` is gitignored.
+   `JD_PASSWORD`. For the Files card, also fill in `EVERYTHING_USER` and
+   `EVERYTHING_PASS`: Everything 1.5's HTTP server login (Tools → Options →
+   HTTP Server, port 8089). `.env` is gitignored.
 
 2. **Status API.**
    ```powershell

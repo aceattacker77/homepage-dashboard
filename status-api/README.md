@@ -21,6 +21,7 @@ It only **reads** Hermes state files and shells out to read-only commands
 | `/gpu-status` | GPU | `nvidia-smi` on the host |
 | `/skills-learned` | Skills Learned | `skills/` + `profiles/*/skills/` vs bundled `hermes-agent/{skills,optional-skills}`; `state/skills_ledger.json` |
 | `/second-brain` | Second Brain | `C:\Users\Admin\second-brain` (files + `git log`, read-only) |
+| `/everything?url=&web=&days=30` | Files | Everything 1.5 HTTP server (JSON mode). Three queries: recent files by an include list (folders + file types, minus `.git`, `.obsidian`, `Logs`, `~$` temp files), plus Downloads older than `days`, both the biggest files and a size total over up to 20,000 rows. The Basic auth Homepage sends is forwarded and not stored. `url` and `web` must be localhost or `host.docker.internal`. |
 
 Port **8787**. Binds `0.0.0.0` so the Homepage container can reach it.
 
@@ -122,6 +123,8 @@ this API's only writes; it never writes to the vault or Hermes.
 | `HERMES_BASE` | `C:\Users\Admin\AppData\Local\hermes` | Hermes base dir (default profile = worker agent) |
 | `SECOND_BRAIN_DIR` | `C:\Users\Admin\second-brain` | Obsidian vault folder |
 | `SECOND_BRAIN_VAULT` | `second-brain` | Vault name used in `obsidian://` links |
+| `EVERYTHING_URL` | `http://127.0.0.1:8089` | Everything's HTTP server, as the status API reaches it (when the widget passes no `url`) |
+| `EVERYTHING_WEB` | `http://localhost:8089` | The same server as your browser reaches it; the card's rows link here |
 
 `OPENROUTER_API_KEY` is read from `$HERMES_HOME/.env`
 (`profiles/hermes-builder/.env`), falling back to the base `.env`, then the

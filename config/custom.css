@@ -100,7 +100,7 @@ body, #__next {
   color: var(--accent) !important;
 }
 
-/* Everything card search bar (injected by custom.js) */
+/* Files card search bar (injected by custom.js) */
 .everything-search {
   margin: 0.25rem 0.5rem 0.35rem;
 }

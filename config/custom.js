@@ -1,7 +1,7 @@
 /*
   CYBER://HUB -- client-side extras Homepage's YAML can't express.
 
-  Everything search bar: injected into the Everything card. Submitting opens
+  Files search bar: injected into the Files card. Submitting opens
   Everything's own web UI in a new tab; the browser runs on this machine, so
   it uses localhost (the container-only host.docker.internal name won't
   resolve here). The browser asks for the Everything login itself -- no
@@ -9,7 +9,7 @@
 */
 (() => {
   const EVERYTHING_WEB = "http://localhost:8089/";
-  const CARD = 'li.service[data-name="Everything"]';
+  const CARD = 'li.service[data-name="Files"]';
 
   function addEverythingSearch() {
     const card = document.querySelector(CARD);

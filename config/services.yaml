@@ -128,6 +128,40 @@
             limit: 6
             target: "{link}"
 
+    # Files: voidtools Everything 1.5 HTTP server -> status API /everything.
+    # Two lists from one call: recent files in my own folders (include list:
+    # folders + file types) and Downloads cleanup (files older than `days`:
+    # total, then the biggest). Homepage sends username/password as Basic
+    # auth; the status API forwards it and stores nothing. Rows link to
+    # Everything's web UI at `web` (as this PC's browser reaches it).
+    # The search box above the lists is injected by custom.js.
+    - Files:
+        icon: mdi-file-search
+        description: Recent · Downloads cleanup
+        widgets:
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&web=http://localhost:8089&days=30"
+            username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
+            password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
+            refreshInterval: 60000
+            display: dynamic-list
+            mappings:
+              items: recent
+              name: name
+              label: label
+              target: "{href}"
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&web=http://localhost:8089&days=30"
+            username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
+            password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
+            refreshInterval: 60000
+            display: dynamic-list
+            mappings:
+              items: cleanup
+              name: name
+              label: label
+              target: "{href}"
+
 # ---------------------------------------------------------------------------
 # YouTube uploads, one Custom API card per channel.
 #
@@ -280,38 +314,3 @@
               label: Album
             - field: status_line
               label: Status
-
-    # voidtools Everything 1.5 HTTP server -> status API /everything.
-    # Homepage sends username/password as Basic auth; the status API forwards
-    # it to Everything and stores nothing. Options ride on the query string:
-    #   url      Everything HTTP server (as seen from the host)
-    #   exclude  paths to skip, ';'-separated (omit for the built-in defaults)
-    #   huge     "huge file" threshold for Everything's size: filter
-    - Everything:
-        icon: mdi-file-search
-        description: File index
-        widgets:
-          - type: customapi
-            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C;C:%5CUsers%5CAdmin%5C.claude%5C;C:%5CProgram%20Files%20(x86)%5CSteam%5Cappcache%5C;%5C__pycache__%5C;status-api.log;%5CGoogleUpdater%5C;%5C.pytest_cache%5C"
-            username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
-            password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
-            refreshInterval: 60000
-            mappings:
-              - field: indexed_label
-                label: Indexed
-              - field: changed_today_label
-                label: Today
-              - field: huge_label
-                label: Huge
-              - field: downloads_label
-                label: Downloads
-          - type: customapi
-            url: "{{HOMEPAGE_VAR_STATUS_API}}/everything?url=http://host.docker.internal:8089&huge=2gb&exclude=C:%5CUsers%5CAdmin%5CAppData%5C;C:%5CProgramData%5C;C:%5CWindows%5C;$Recycle.Bin;%5C.git%5C;C:%5CUsers%5CAdmin%5C.claude%5C;C:%5CProgram%20Files%20(x86)%5CSteam%5Cappcache%5C;%5C__pycache__%5C;status-api.log;%5CGoogleUpdater%5C;%5C.pytest_cache%5C"
-            username: "{{HOMEPAGE_VAR_EVERYTHING_USER}}"
-            password: "{{HOMEPAGE_VAR_EVERYTHING_PASS}}"
-            refreshInterval: 60000
-            display: dynamic-list
-            mappings:
-              items: items
-              name: name
-              label: label

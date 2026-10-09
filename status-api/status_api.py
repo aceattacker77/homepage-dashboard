@@ -12,7 +12,7 @@ Exposes JSON endpoints consumed by Homepage `customapi` widgets:
   /skills-learned      new (non-bundled) Hermes skills per week
   /second-brain        note of the day + notes added this week from the vault
   /now-playing         MusicBee's current track (file written by musicbee-plugin/)
-  /everything          voidtools Everything counts + recent files (auth passed through)
+  /everything          Files card: recent files + Downloads cleanup via Everything (auth passed through)
 
 STRICTLY READ-ONLY. It never creates, edits, pauses or fires a cron job, and
 never sends messages. It only reads Hermes state files and the second-brain
@@ -100,10 +100,13 @@ NOW_PLAYING_FILE = os.environ.get(
                  "MusicBee", "HomepageNowPlaying", "nowplaying.json"))
 NOW_PLAYING_CACHE_TTL = 2
 
-# Everything card: queries Everything's HTTP server; credentials arrive on each
+# Files card: queries Everything's HTTP server; credentials arrive on each
 # request from Homepage (customapi username/password) and are only forwarded.
+# EVERYTHING_WEB is the same server as the user's browser reaches it (rows
+# link there).
 EVERYTHING_URL = os.environ.get("EVERYTHING_URL", "http://127.0.0.1:8089")
-EVERYTHING_CACHE_TTL = 30
+EVERYTHING_WEB = os.environ.get("EVERYTHING_WEB", "http://localhost:8089")
+EVERYTHING_CACHE_TTL = 60
 
 
 def skill_trees():
@@ -1018,23 +1021,22 @@ def now_playing_route():
 # --------------------------------------------------------------------------
 
 @app.get("/everything")
-def everything_route(request: Request, url: str = "", exclude: str | None = None,
-                     huge: str = everything.DEFAULT_HUGE):
+def everything_route(request: Request, url: str = "", web: str = "",
+                     days: int = everything.DEFAULT_OLDER_DAYS):
     try:
         base = everything.validate_url(url or EVERYTHING_URL)
+        web_base = everything.validate_url(web or EVERYTHING_WEB)
     except ValueError as exc:
-        return JSONResponse({"status": "error", "error": str(exc), "items": []})
-    if not re.fullmatch(r"\d+(\.\d+)?\s*[kmgt]?b?", huge.strip(), re.I):
-        huge = everything.DEFAULT_HUGE
+        return JSONResponse({"status": "error", "error": str(exc), "recent": [], "cleanup": []})
+    days = min(max(days, 1), 3650)
     auth = request.headers.get("authorization")
-    excludes = everything.parse_excludes(exclude)
     # Cache per config + credentials so a wrong password is never served a hit.
-    name = "everything:" + str(hash((base, auth, tuple(excludes), huge)))
+    name = "everything:" + str(hash((base, web_base, auth, days)))
     if name not in _CACHES:
         _CACHES[name] = _cache()
-    fetch = lambda q, c, sort=False: everything.http_fetch(base, auth, q, c, sort)
-    return JSONResponse(cached(name, EVERYTHING_CACHE_TTL, lambda: everything.build_everything(
-        fetch, excludes, huge.strip(), int(time.time() * 1000))))
+    fetch = lambda q, c, sort=None: everything.http_fetch(base, auth, q, c, sort)
+    return JSONResponse(cached(name, EVERYTHING_CACHE_TTL, lambda: everything.build_files_card(
+        fetch, web_base, days, int(time.time() * 1000))))
 
 
 # --------------------------------------------------------------------------

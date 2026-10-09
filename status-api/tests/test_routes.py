@@ -68,3 +68,28 @@ def test_second_brain_route_missing_vault(tmp_path, monkeypatch):
     body = resp.json()
     assert "vault not found" in body["error"]
     assert body["items"][0]["name"] == "Vault unavailable"
+
+
+def test_files_card_route_passes_auth_and_days(monkeypatch):
+    seen = []
+
+    def fake_http_fetch(base, auth, query, count, sort=None):
+        seen.append((base, auth, query, sort))
+        return {"totalResults": 0, "results": []}
+
+    monkeypatch.setattr(status_api.everything, "http_fetch", fake_http_fetch)
+    resp = TestClient(status_api.app).get(
+        "/everything?url=http://host.docker.internal:8089&days=45&web=http://localhost:8089",
+        headers={"Authorization": "Basic dTpw"})
+    body = resp.json()
+    assert resp.status_code == 200 and body["status"] == "ok"
+    assert body["cleanup"][0]["name"] == "Downloads > 45 days"
+    assert body["cleanup"][0]["href"].startswith("http://localhost:8089/?search=")
+    assert {s[0] for s in seen} == {"http://host.docker.internal:8089"}
+    assert {s[1] for s in seen} == {"Basic dTpw"}
+
+
+def test_files_card_route_rejects_bad_options():
+    client = TestClient(status_api.app)
+    assert client.get("/everything?url=http://example.com").json()["status"] == "error"
+    assert client.get("/everything?url=http://localhost:8089&web=http://evil.test").json()["status"] == "error"

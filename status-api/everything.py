@@ -1,10 +1,15 @@
-"""Everything card behind the /everything endpoint.
+"""Files card behind the /everything endpoint (voidtools Everything 1.5).
 
-Queries voidtools Everything 1.5's HTTP server (JSON mode) for four counts and
-the most recently modified files. Homepage's customapi widget calls this
-endpoint server-side with `username`/`password`; the Basic auth header it
-sends is forwarded to Everything as-is, so the credentials live only in
-Homepage's HOMEPAGE_VAR_EVERYTHING_* env vars and are never stored here.
+Two lists in one card:
+  * Recent  -- the newest files in my own folders, by an include list
+               (folders + file types) rather than an ever-growing exclude
+               list, so app caches and logs never show up.
+  * Cleanup -- Downloads files older than N days: a total, then the biggest.
+
+Homepage's customapi widget calls this endpoint server-side with
+`username`/`password`; the Basic auth header it sends is forwarded to
+Everything as-is, so the credentials live only in Homepage's
+HOMEPAGE_VAR_EVERYTHING_* env vars and are never stored here.
 
 Everything returns size and date_modified as strings; date_modified is a
 Windows FILETIME (100 ns ticks since 1601-01-01), converted with integer
@@ -15,33 +20,32 @@ from __future__ import annotations
 
 import json
 import ntpath
-import re
 import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 
 FILETIME_EPOCH_MS = 11644473600000
 TIMEOUT_S = 8
-RECENT_COUNT = 5
-NAME_MAX = 28      # the card is narrow; longer names wrap onto several lines
+RECENT_COUNT = 4
+CLEANUP_TOP = 3
+CLEANUP_SCAN = 20000   # rows summed for the cleanup total; more shows as "≥"
+NAME_MAX = 28          # the card is narrow; longer names wrap onto several lines
 FOLDER_MAX = 18
+DEFAULT_OLDER_DAYS = 30
 
-DEFAULT_EXCLUDES = [
-    r'"C:\Users\Admin\AppData\"',
-    r'"C:\ProgramData\"',
-    r'"C:\Windows\"',
-    '"$Recycle.Bin"',
-    r'"\.git\"',
-    r'"C:\Users\Admin\.claude\"',
-    r'"C:\Program Files (x86)\Steam\appcache\"',
-    r'"\__pycache__\"',
-    '"status-api.log"',
-    r'"\GoogleUpdater\"',
-    r'"\.pytest_cache\"',
-]
-DEFAULT_HUGE = "2gb"
-DOWNLOADS = r'"C:\Users\Admin\Downloads\"'
+HOME = r"C:\Users\Admin"
+DOWNLOADS = HOME + r"\Downloads"
+# Not the second-brain vault: Hermes writes it every few minutes and the
+# Second Brain card already covers it.
+MY_FOLDERS = [HOME + "\\" + f for f in
+              ("Desktop", "Documents", "Downloads", "Pictures", "Videos", "OneDrive")]
+MY_TYPES = ("pdf;doc;docx;xls;xlsx;csv;ppt;pptx;txt;md;epub;"
+            "jpg;jpeg;png;gif;webp;heic;svg;mp4;mkv;mov;webm;mp3;flac;m4a;wav;"
+            "zip;7z;rar;exe;msi")
+# \Logs\: ShareX and several games log into Documents\<app>\Logs.
+NOISE = r'!"\.git\" !"\.obsidian\" !"~$" !"\Logs\"'
 
 # Only ever talk to Everything on this machine: the status API listens on
 # 0.0.0.0 and must not become a proxy to arbitrary hosts.
@@ -89,16 +93,6 @@ def ago(ms, now_ms):
             return f"{s // div}{unit} ago"
 
 
-def parse_excludes(raw):
-    """`exclude` query value: entries separated by ';' or newlines, or the defaults."""
-    if raw is None:
-        return list(DEFAULT_EXCLUDES)
-    items = [x.strip() for x in re.split(r"[;\n]", raw) if x.strip()]
-    return [x if x.startswith('"') else f'"{x}"' for x in items]
-
-
-def exclusion_clause(excludes):
-    return " ".join(f"!{x.lstrip('!')}" for x in excludes)
 
 
 def validate_url(url):
@@ -108,11 +102,11 @@ def validate_url(url):
     return f"{parts.scheme}://{parts.netloc}"
 
 
-def http_fetch(base, auth_header, query, count, sort=False):
+def http_fetch(base, auth_header, query, count, sort=None):
     params = {"s": query, "j": "1", "c": str(count),
               "path_column": "1", "size_column": "1", "date_modified_column": "1"}
     if sort:
-        params.update(sort="date_modified", ascending="0")
+        params.update(sort=sort, ascending="0")
     req = urllib.request.Request(f"{base}/?{urllib.parse.urlencode(params)}")
     if auth_header:
         req.add_header("Authorization", auth_header)
@@ -134,48 +128,74 @@ def _count(data):
         return 0
 
 
-def _stat_card(status, label, **counts):
-    keys = ("indexed", "changed_today", "huge", "downloads")
-    out = {"status": status, "status_label": label, "items": []}
-    for k in keys:
-        v = counts.get(k)
-        out[k] = v
-        out[f"{k}_label"] = f"{v:,}" if isinstance(v, int) else label
-    return out
+def _int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
-def build_everything(fetch, excludes, huge, now_ms):
-    """`fetch(query, count, sort=False)` returns Everything's JSON dict."""
-    ex = exclusion_clause(excludes)
-    queries = {
-        "indexed": ("", 1, False),
-        "changed_today": (f"file: dm:today {ex}".strip(), 1, False),
-        "huge": (f"file: size:>{huge}", 1, False),
-        "downloads": (f"file: {DOWNLOADS}", 1, False),
-        "recent": (f"file: {ex}".strip(), RECENT_COUNT, True),
+def web_search(web, query, sort=None):
+    """Link into Everything's own web UI (opened by the browser on this PC)."""
+    url = f"{web}/?search={urllib.parse.quote(query, safe='')}"
+    return url + (f"&sort={sort}&ascending=0" if sort else "")
+
+
+def cutoff_date(now_ms, days):
+    return (datetime.fromtimestamp(now_ms / 1000) - timedelta(days=days)).date().isoformat()
+
+
+def file_queries(days, now_ms):
+    folders = " | ".join(f'"{f}\\"' for f in MY_FOLDERS)
+    old = f'file: "{DOWNLOADS}\\" dm:<{cutoff_date(now_ms, days)}'
+    return {
+        "recent": (f"file: <{folders}> ext:{MY_TYPES} {NOISE}", RECENT_COUNT, "date_modified"),
+        "biggest": (old, CLEANUP_TOP, "size"),
+        "total": (old, CLEANUP_SCAN, "size"),
     }
+
+
+def _message(status, text):
+    return {"status": status, "recent": [{"name": text, "label": "", "href": ""}],
+            "cleanup": [], "cleanup_files": 0, "cleanup_bytes": 0}
+
+
+def build_files_card(fetch, web, days, now_ms):
+    """`fetch(query, count, sort=None)` returns Everything's JSON dict.
+    `web` is Everything's web UI as the browser sees it (rows link there)."""
+    queries = file_queries(days, now_ms)
     try:
         with ThreadPoolExecutor(max_workers=len(queries)) as pool:
-            futs = {k: pool.submit(fetch, q, c, sort) for k, (q, c, sort) in queries.items()}
-            results = {k: f.result() for k, f in futs.items()}
+            futs = {k: pool.submit(fetch, q, c, s) for k, (q, c, s) in queries.items()}
+            res = {k: f.result() for k, f in futs.items()}
     except EverythingAuthError:
-        return _stat_card("auth", "auth failed")
+        return _message("auth", "Everything login failed")
     except EverythingOffline:
-        return _stat_card("offline", "offline")
+        return _message("offline", "Everything offline")
 
-    items = []
-    for r in (results["recent"].get("results") or [])[:RECENT_COUNT]:
-        ms = filetime_to_ms(r.get("date_modified"))
-        folder = ntpath.basename((r.get("path") or "").rstrip("\\")) or r.get("path") or "—"
-        rel = ago(ms, now_ms)
-        size = human_size(r.get("size"))
-        folder = truncate(folder, FOLDER_MAX)
-        items.append({"name": truncate(r.get("name") or "?", NAME_MAX), "folder": folder, "path": r.get("path"),
-                      "ago": rel, "size": size, "modified_ms": ms,
-                      "label": f"{folder} · {rel} · {size}"})
+    def full_path(r):
+        return ntpath.join(r.get("path") or "", r.get("name") or "")
 
-    card = _stat_card("ok", "online", **{k: _count(results[k]) for k in
-                                          ("indexed", "changed_today", "huge", "downloads")})
-    card["items"] = items
-    card["huge_threshold"] = huge
-    return card
+    recent = []
+    for r in (res["recent"].get("results") or [])[:RECENT_COUNT]:
+        folder = truncate(ntpath.basename((r.get("path") or "").rstrip("\\")) or "—", FOLDER_MAX)
+        recent.append({"name": truncate(r.get("name") or "?", NAME_MAX),
+                       "label": f"{folder} · {ago(filetime_to_ms(r.get('date_modified')), now_ms)}",
+                       "href": web_search(web, f'"{full_path(r)}"')})
+    if not recent:
+        recent = [{"name": "No recent files", "label": "", "href": ""}]
+
+    scanned = res["total"].get("results") or []
+    files = _count(res["total"])
+    total = sum(_int(r.get("size")) for r in scanned)
+    summary = {"name": f"Downloads > {days} days",
+               "label": "all tidy" if not files else
+               f"{'≥ ' if files > len(scanned) else ''}{human_size(total)} · {files:,} files",
+               "href": web_search(web, queries["total"][0][len("file: "):], sort="size")}
+    biggest = [{"name": truncate(r.get("name") or "?", NAME_MAX),
+                "label": f"{human_size(r.get('size'))} · {ago(filetime_to_ms(r.get('date_modified')), now_ms)}",
+                "href": web_search(web, f'"{full_path(r)}"')}
+               for r in (res["biggest"].get("results") or [])[:CLEANUP_TOP]]
+
+    return {"status": "ok", "recent": recent, "cleanup": [summary] + biggest,
+            "cleanup_files": files, "cleanup_bytes": total, "cutoff": cutoff_date(now_ms, days)}
